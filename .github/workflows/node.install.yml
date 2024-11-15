@@ -7,6 +7,9 @@ on:
   push:
   pull_request:
 
+env:
+  PACKAGE_FILENAME: diamondlightsource-cs-web-lib-0.3.2.tgz
+
 jobs:
   build:
 
@@ -28,3 +31,29 @@ jobs:
     - run: npm run all-checks
     - run: npm run test
     - run: npm run rollup
+    - run: npm pack
+    - uses: actions/upload-artifact@master
+      with: 
+        name: packed-module
+        path: $PACKAGE_FILENAME
+
+  test-built-module:
+
+      runs-on: ubuntu-latest
+
+      strategy:
+        matrix:
+          node-version: [22.x]
+
+      steps:
+      - uses: actions/checkout@v4.1.7
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4.0.3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - uses: actions/download-artifact@master
+        with:
+          name: packed-module
+          path: $PACKAGE_FILENAME
+      - run: npm install $PACKAGE_FILENAME
